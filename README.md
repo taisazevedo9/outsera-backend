@@ -2,18 +2,17 @@
 
 RESTful API for reading the list of nominees and winners of the **Worst Picture** category from the Golden Raspberry Awards.
 
-## 📋 About the Project
+## About the Project
 
 This API was developed to meet the following requirements:
 
 - Read CSV file of movies and insert data into a database on application startup
 - Get the producer with the longest interval between two consecutive awards
 - Get the producer who obtained two awards the fastest
-- Implementation based on **Richardson Maturity Model Level 2**
 - Integration tests ensuring compliance with provided data
 - **SQLite embedded database** (in-memory) - no external installation required
 
-## 🚀 Technologies
+##  Technologies
 
 - **Node.js** - JavaScript Runtime
 - **Express 4.18.2** - Web Framework
@@ -23,7 +22,7 @@ This API was developed to meet the following requirements:
 - **Supertest 6.3.3** - HTTP Integration Testing
 - **csv-parser 3.2.0** - CSV File Reading
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Clone the repository
@@ -34,7 +33,7 @@ cd outsera-backend
 npm install
 ```
 
-## 🏃 How to Run the Project
+##  How to Run the Project
 
 ### Production Mode
 
@@ -60,7 +59,7 @@ Connected to SQLite database
 Movie import process completed
 ```
 
-## 🧪 Run Integration Tests
+## Run Integration Tests
 
 ```bash
 # Run all tests with coverage
@@ -71,7 +70,7 @@ npm test
 - 3 test suites (awards, csvImporter, errorHandler)
 - Code coverage: ~78%
 
-## 📚 API Documentation (Swagger)
+## API Documentation (Swagger)
 
 After starting the server, access the interactive documentation at:
 
@@ -87,7 +86,7 @@ http://localhost:3000/docs
 - Supports multiple producers (separated by comma or "and")
 - Returns only producers with **2 or more wins**
 
-## 📂 CSV Structure
+## CSV Structure
 
 The CSV file must have the following structure with semicolon (`;`) as separator:
 
@@ -98,7 +97,7 @@ The CSV file must have the following structure with semicolon (`;`) as separator
 - `producers` - Producers (separated by comma or "and")
 - `winner` - "yes" for winners, empty for nominees
 
-## 🗄️ Database
+## Database
 
 - **DBMS:** SQLite3 (embedded)
 - **File:** `database.sqlite` (automatically created in root)
@@ -132,13 +131,9 @@ CREATE TABLE movies (
 - **200 OK** - Success in read operations
 - **500 Internal Server Error** - Internal server error
 
-### ✅ HTTP Headers
 
-- **Content-Type: application/json** - Response format
 
-## 🧪 Integration Tests
-
-## 🔧 Environment Variables
+##  Environment Variables
 
 Create a `.env` file in the project root (use `.env.example` as reference):
 
