@@ -12,7 +12,7 @@ This API was developed to meet the following requirements:
 - Integration tests ensuring compliance with provided data
 - **SQLite embedded database** (in-memory) - no external installation required
 
-##  Technologies
+## Technologies
 
 - **Node.js** - JavaScript Runtime
 - **Express 4.18.2** - Web Framework
@@ -33,7 +33,7 @@ cd outsera-backend
 npm install
 ```
 
-##  How to Run the Project
+## How to Run the Project
 
 ### Production Mode
 
@@ -55,7 +55,7 @@ The server will start on port **3000** by default.
 Server running on port 3000
 Swagger documentation available at: http://localhost:3000/docs
 Connected to SQLite database
-✅ X movie(s) successfully imported from CSV
+ X movie(s) successfully imported from CSV
 Movie import process completed
 ```
 
@@ -66,7 +66,7 @@ Movie import process completed
 npm test
 
 **Expected result:**
-- ✅ **43 integration tests passing**
+-  **43 integration tests passing**
 - 3 test suites (awards, csvImporter, errorHandler)
 - Code coverage: ~78%
 
@@ -117,23 +117,21 @@ CREATE TABLE movies (
 )
 ````
 
-### ✅ Resources
+### Resources
 
 - Distinct URIs for each resource: `/api/awards`
 - Unique resource identification: `/api/awards/producers-intervals`
 
-### ✅ Appropriate HTTP Verbs
+### Appropriate HTTP Verbs
 
 - **GET** - Data reading (idempotent, safe)
 
-### ✅ Correct HTTP Status Codes
+### Correct HTTP Status Codes
 
 - **200 OK** - Success in read operations
 - **500 Internal Server Error** - Internal server error
 
-
-
-##  Environment Variables
+## Environment Variables
 
 Create a `.env` file in the project root (use `.env.example` as reference):
 
@@ -152,7 +150,7 @@ CSV_PATH=./uploads/movielist.csv
 CORS_ORIGIN=*
 ```
 
-## 📊 Usage Examples
+## Usage Examples
 
 ### Get producer award intervals
 
