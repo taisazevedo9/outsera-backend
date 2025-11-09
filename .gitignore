@@ -5,7 +5,6 @@ node_modules/
 .DS_Store
 data/*.csv
 !data/movies.csv
-uploads/
 coverage/
 test-*.csv
 test-database.sqlite
