@@ -1,52 +1,6 @@
 const movieRepository = require('../repositories/movieRepository');
 
 class AwardService {
-  /**
-   * Calculates intervals between consecutive producer awards
-   * @returns {Promise<Object>} Object with min and max intervals
-   */
-  async getProducersIntervals() {
-    const winners = await movieRepository.findWinners();
-
-    const producerWins = this._groupWinsByProducer(winners);
-
-    const intervals = this._calculateConsecutiveIntervals(producerWins);
-
-    if (intervals.length === 0) {
-      return { min: [], max: [] };
-    }
-
-    return this._findMinMaxIntervals(intervals);
-  }
-
-  /**
-   * Groups wins by producer
-   * @private
-   * @param {Array} winners - List of winning movies
-   * @returns {Object} Object with producers and their winning years
-   */
-  _groupWinsByProducer(winners) {
-    const producerWins = {};
-
-    winners.forEach(movie => {
-      if (!movie.producers) return;
-
-      // Split producers (multiple separated by comma or "and")
-      const producers = movie.producers
-        .split(/,| and /)
-        .map(p => p.trim())
-        .filter(p => p.length > 0);
-
-      producers.forEach(producer => {
-        if (!producerWins[producer]) {
-          producerWins[producer] = [];
-        }
-        producerWins[producer].push(movie.year);
-      });
-    });
-
-    return producerWins;
-  }
 
   /**
    * Calculates consecutive intervals for each producer
@@ -55,27 +9,17 @@ class AwardService {
    * @returns {Array} List of intervals
    */
   _calculateConsecutiveIntervals(producerWins) {
-    const intervals = [];
 
-    Object.keys(producerWins).forEach(producer => {
-      const years = producerWins[producer].sort((a, b) => a - b);
-
-      if (years.length >= 2) {
-        for (let i = 0; i < years.length - 1; i++) {
-          const previousWin = years[i];
-          const followingWin = years[i + 1];
-          const interval = followingWin - previousWin;
-
-          intervals.push({
-            producer,
-            interval,
-            previousWin,
-            followingWin
-          });
-        }
-      }
-    });
-
+    const intervals = Object.entries(producerWins)
+      .flatMap(([producer, years]) => {
+        years.sort((a, b) => a - b);
+        return years.slice(1).map((y, i) => ({
+          producer,
+          interval: y - years[i],
+          previousWin: years[i],
+          followingWin: y
+        }));
+      });
     return intervals;
   }
 
@@ -89,11 +33,50 @@ class AwardService {
     const minInterval = Math.min(...intervals.map(i => i.interval));
     const maxInterval = Math.max(...intervals.map(i => i.interval));
 
-    const min = intervals.filter(i => i.interval === minInterval);
-    const max = intervals.filter(i => i.interval === maxInterval);
+    const min = intervals.filter(i => i.interval === minInterval).slice(0, 2);
+    const max = intervals.filter(i => i.interval === maxInterval).slice(0, 2);
 
     return { min, max };
   }
+
+
+  async getProducerIntervals() {
+    const movies = movieRepository.findAll();
+
+    const csv = ['year;title;studios;producers;winner']
+      .concat(
+        movies.map(m =>
+          `${m.year};${m.title || ''};${m.studios || ''};${m.producers || ''};${m.winner || ''}`
+        )
+      )
+      .join('\n');
+
+    const producerWins = csv
+      .trim()
+      .split("\n")
+      .slice(1)
+      .reduce((acc, line) => {
+        const [year, , , producers, winner] = line.split(";");
+        if (winner?.trim() !== "yes") return acc;
+
+        producers
+          .split(/,| and /)
+          .map(p => p.trim())
+          .forEach(p => {
+            acc[p] ??= [];
+            acc[p].push(+year);
+          });
+        return acc;
+      }, {});
+
+
+    const intervals = this._calculateConsecutiveIntervals(producerWins);
+
+    if (!intervals.length) return { min: [], max: [] };
+
+    return this._findMinMaxIntervals(intervals);
+  }
+
 }
 
 module.exports = new AwardService();

@@ -5,9 +5,10 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./config/swagger');
 const awardsRoutes = require('./routes/awards');
-const { importMoviesFromCSV } = require('./utils/csvImporter');
 const { errorHandler } = require('./middlewares/errorHandler');
-
+const { importBuffer } = require('./utils/csvBuffer');
+const movieRepository = require('./repositories/movieRepository');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -34,9 +35,14 @@ app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
   const csvPath = process.env.CSV_PATH || path.resolve(__dirname, '../uploads/movielist.csv');
-  importMoviesFromCSV(csvPath, true, true)
-    .then(() => {
-      console.log('Movie import process completed');
+  const buffer = fs.readFileSync(csvPath);
+
+  movieRepository.clear();
+  console.log('Memory cleared before import');
+
+  importBuffer(buffer, true, true)
+    .then((count) => {
+      console.log(`Movie import process completed: ${count} movies imported from buffer`);
     })
     .catch((error) => {
       console.error('Error during movie import:', error);

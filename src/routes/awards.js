@@ -7,7 +7,10 @@ const router = express.Router();
 
 
 router.get('/producers-intervals', asyncHandler(async (req, res) => {
-  const result = await awardService.getProducersIntervals();
+
+  console.log('---------------------');
+  const result = await awardService.getProducerIntervals();
+  // const result = await awardService.getProducersIntervals();
   res.status(HTTP_STATUS.OK).json(result);
 }));
 
