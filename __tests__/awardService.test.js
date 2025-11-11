@@ -309,7 +309,11 @@ describe('AwardService Tests', () => {
   describe('_calculateConsecutiveIntervals()', () => {
     test('should calculate intervals correctly for single producer', () => {
       const producerWins = {
-        'Producer A': [1990, 1992, 1995]
+        'Producer A': [
+          { year: 1990, studios: 'Studio A' },
+          { year: 1992, studios: 'Studio B' },
+          { year: 1995, studios: 'Studio C' }
+        ]
       };
 
       const intervals = awardService._calculateConsecutiveIntervals(producerWins);
@@ -319,19 +323,21 @@ describe('AwardService Tests', () => {
         producer: 'Producer A',
         interval: 2,
         previousWin: 1990,
-        followingWin: 1992
+        followingWin: 1992,
+        studios: 'Studio A → Studio B'
       });
       expect(intervals[1]).toMatchObject({
         producer: 'Producer A',
         interval: 3,
         previousWin: 1992,
-        followingWin: 1995
+        followingWin: 1995,
+        studios: 'Studio B → Studio C'
       });
     });
 
     test('should return empty array for producer with only one win', () => {
       const producerWins = {
-        'Producer A': [1990]
+        'Producer A': [{ year: 1990, studios: 'Studio A' }]
       };
 
       const intervals = awardService._calculateConsecutiveIntervals(producerWins);
@@ -341,8 +347,14 @@ describe('AwardService Tests', () => {
 
     test('should handle multiple producers', () => {
       const producerWins = {
-        'Producer A': [1990, 1992],
-        'Producer B': [2000, 2005]
+        'Producer A': [
+          { year: 1990, studios: 'Studio A' },
+          { year: 1992, studios: 'Studio B' }
+        ],
+        'Producer B': [
+          { year: 2000, studios: 'Studio X' },
+          { year: 2005, studios: 'Studio Y' }
+        ]
       };
 
       const intervals = awardService._calculateConsecutiveIntervals(producerWins);
@@ -350,6 +362,12 @@ describe('AwardService Tests', () => {
       expect(intervals).toHaveLength(2);
       expect(intervals.find(i => i.producer === 'Producer A')).toBeDefined();
       expect(intervals.find(i => i.producer === 'Producer B')).toBeDefined();
+      
+      const intervalA = intervals.find(i => i.producer === 'Producer A');
+      expect(intervalA.studios).toBe('Studio A → Studio B');
+      
+      const intervalB = intervals.find(i => i.producer === 'Producer B');
+      expect(intervalB.studios).toBe('Studio X → Studio Y');
     });
   });
 

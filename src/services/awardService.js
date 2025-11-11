@@ -5,19 +5,20 @@ class AwardService {
   /**
    * Calculates consecutive intervals for each producer
    * @private
-   * @param {Object} producerWins - Map of producer -> winning years
+   * @param {Object} producerWins - Map of producer -> array of {year, studios}
    * @returns {Array} List of intervals
    */
   _calculateConsecutiveIntervals(producerWins) {
 
     const intervals = Object.entries(producerWins)
-      .flatMap(([producer, years]) => {
-        years.sort((a, b) => a - b);
-        return years.slice(1).map((y, i) => ({
+      .flatMap(([producer, wins]) => {
+        wins.sort((a, b) => a.year - b.year);
+        return wins.slice(1).map((win, i) => ({
           producer,
-          interval: y - years[i],
-          previousWin: years[i],
-          followingWin: y
+          interval: win.year - wins[i].year,
+          previousWin: wins[i].year,
+          followingWin: win.year,
+          studios: `${wins[i].studios} → ${win.studios}`
         }));
       });
     return intervals;
@@ -56,7 +57,7 @@ class AwardService {
       .split("\n")
       .slice(1)
       .reduce((acc, line) => {
-        const [year, , , producers, winner] = line.split(";");
+        const [year, , studios, producers, winner] = line.split(";");
         if (winner?.trim() !== "yes") return acc;
 
         producers
@@ -64,7 +65,10 @@ class AwardService {
           .map(p => p.trim())
           .forEach(p => {
             acc[p] ??= [];
-            acc[p].push(+year);
+            acc[p].push({
+              year: +year,
+              studios: studios?.trim() || 'Unknown'
+            });
           });
         return acc;
       }, {});

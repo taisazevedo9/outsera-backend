@@ -37,15 +37,34 @@ if (process.env.NODE_ENV !== 'test') {
   const csvPath = process.env.CSV_PATH || path.resolve(__dirname, '../uploads/movielist.csv');
   const buffer = fs.readFileSync(csvPath);
 
+  // Backup current data before clearing
+  const backup = movieRepository.findAll();
+  console.log(`Backup created: ${backup.length} movies`);
+
   movieRepository.clear();
   console.log('Memory cleared before import');
 
-  importBuffer(buffer, true, true)
+  importBuffer(buffer, false, true) // clearBeforeImport = false (já limpamos manualmente)
     .then((count) => {
       console.log(`Movie import process completed: ${count} movies imported from buffer`);
     })
     .catch((error) => {
       console.error('Error during movie import:', error);
+      console.log('Rolling back to previous state...');
+      
+      // Rollback: restore backup data
+      movieRepository.clear();
+      backup.forEach(movie => {
+        movieRepository.insert({
+          year: movie.year,
+          title: movie.title,
+          studios: movie.studios,
+          producers: movie.producers,
+          winner: movie.winner
+        });
+      });
+      
+      console.log(`Rollback completed: ${backup.length} movies restored`);
     });
 }
 

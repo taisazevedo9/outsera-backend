@@ -155,6 +155,12 @@ describe('Integration Tests - Awards API', () => {
     /**
      * CRITICAL TEST: Validates exact data from default CSV file
      * This test MUST fail if movielist.csv is modified in any way that changes the result
+     * 
+     * Based on movielist.csv analysis:
+     * - Joel Silver: Won in 1990 (The Adventures of Ford Fairlane - 20th Century Fox) 
+     *                and 1991 (Hudson Hawk - TriStar Pictures) = 1 year interval
+     * - Matthew Vaughn: Won in 2002 (Swept Away - Screen Gems) 
+     *                   and 2015 (Fantastic Four - 20th Century Fox) = 13 years interval
      */
     it('should return exact expected data from default movielist.csv file', async () => {
       const response = await request(app)
@@ -162,14 +168,15 @@ describe('Integration Tests - Awards API', () => {
         .expect(200);
 
       // Expected result based on movielist.csv content
-      // This will fail if the CSV file is modified
+      // This will fail if the CSV file is modified in any way
       const expectedResult = {
         min: [
           {
             producer: 'Joel Silver',
             interval: 1,
             previousWin: 1990,
-            followingWin: 1991
+            followingWin: 1991,
+            studios: '20th Century Fox → TriStar Pictures'
           }
         ],
         max: [
@@ -177,7 +184,8 @@ describe('Integration Tests - Awards API', () => {
             producer: 'Matthew Vaughn',
             interval: 13,
             previousWin: 2002,
-            followingWin: 2015
+            followingWin: 2015,
+            studios: 'Screen Gems → 20th Century Fox'
           }
         ]
       };
@@ -188,79 +196,132 @@ describe('Integration Tests - Awards API', () => {
       expect(Array.isArray(response.body.min)).toBe(true);
       expect(Array.isArray(response.body.max)).toBe(true);
 
-      // Validate minimum interval
+      // EXACT validation for minimum interval
       expect(response.body.min).toHaveLength(expectedResult.min.length);
       expectedResult.min.forEach((expected, index) => {
         const actual = response.body.min[index];
-        expect(actual).toMatchObject({
-          producer: expected.producer,
-          interval: expected.interval,
-          previousWin: expected.previousWin,
-          followingWin: expected.followingWin
-        });
+        
+        // Validate all fields exactly
+        expect(actual.producer).toBe(expected.producer);
+        expect(actual.interval).toBe(expected.interval);
+        expect(actual.previousWin).toBe(expected.previousWin);
+        expect(actual.followingWin).toBe(expected.followingWin);
+        expect(actual.studios).toBe(expected.studios);
+        
+        // Validate interval calculation
+        expect(actual.followingWin - actual.previousWin).toBe(actual.interval);
       });
 
-      // Validate maximum interval
+      // EXACT validation for maximum interval
       expect(response.body.max).toHaveLength(expectedResult.max.length);
       expectedResult.max.forEach((expected, index) => {
         const actual = response.body.max[index];
-        expect(actual).toMatchObject({
-          producer: expected.producer,
-          interval: expected.interval,
-          previousWin: expected.previousWin,
-          followingWin: expected.followingWin
-        });
+        
+        // Validate all fields exactly
+        expect(actual.producer).toBe(expected.producer);
+        expect(actual.interval).toBe(expected.interval);
+        expect(actual.previousWin).toBe(expected.previousWin);
+        expect(actual.followingWin).toBe(expected.followingWin);
+        expect(actual.studios).toBe(expected.studios);
+        
+        // Validate interval calculation
+        expect(actual.followingWin - actual.previousWin).toBe(actual.interval);
       });
 
-      // Additional validation: ensure intervals are correct
+      // Ensure no extra fields that could indicate data corruption
       response.body.min.forEach(item => {
-        expect(item.followingWin - item.previousWin).toBe(item.interval);
+        const keys = Object.keys(item);
+        expect(keys).toContain('producer');
+        expect(keys).toContain('interval');
+        expect(keys).toContain('previousWin');
+        expect(keys).toContain('followingWin');
+        expect(keys).toContain('studios');
       });
+
       response.body.max.forEach(item => {
-        expect(item.followingWin - item.previousWin).toBe(item.interval);
+        const keys = Object.keys(item);
+        expect(keys).toContain('producer');
+        expect(keys).toContain('interval');
+        expect(keys).toContain('previousWin');
+        expect(keys).toContain('followingWin');
+        expect(keys).toContain('studios');
       });
     });
 
     /**
      * CRITICAL TEST: Validates that CSV file hasn't been tampered with
-     * Checks total number of winners in the file
+     * Checks exact number of winners and total movies in the file
      */
     it('should have expected number of winning movies from default CSV', async () => {
       const winners = movieRepository.findWinners();
+      const allMovies = movieRepository.findAll();
 
-      // This number comes from the original movielist.csv
+      // EXACT counts from original movielist.csv (207 lines total: 1 header + 206 movies)
       // If CSV is modified, this test will fail
-      expect(winners.length).toBeGreaterThan(0);
-
-      // Validate that all winners have year and producers
+      expect(allMovies.length).toBe(206); // Total movies in CSV (excluding header)
+      expect(winners.length).toBe(42); // Exact number of winning movies
+      
+      // Validate that all winners have correct structure
       winners.forEach(winner => {
         expect(winner.year).toBeDefined();
+        expect(typeof winner.year).toBe('number');
+        expect(winner.year).toBeGreaterThanOrEqual(1980);
+        expect(winner.year).toBeLessThanOrEqual(2019); // Last year in CSV
+        
         expect(winner.title).toBeDefined();
-        expect(winner.winner).toBe(1);
+        expect(typeof winner.title).toBe('string');
+        expect(winner.title.length).toBeGreaterThan(0);
+        
+        expect(winner.winner).toBe('yes');
+        
+        expect(winner.studios).toBeDefined();
+        expect(winner.producers).toBeDefined();
       });
     });
 
     /**
      * CRITICAL TEST: Validates CSV file integrity
-     * Checks if the file was modified by comparing hash or key metrics
+     * Checks if the file was modified by comparing exact line count and structure
      */
     it('should maintain CSV file integrity', () => {
       const csvContent = fs.readFileSync(CSV_PATH, 'utf-8');
       const lines = csvContent.trim().split('\n');
 
-      // Validate CSV structure
-      expect(lines.length).toBeGreaterThan(1); // Header + data rows
+      // EXACT line count validation (header + 206 data rows)
+      expect(lines.length).toBe(207);
 
-      // Validate header
+      // Validate exact header format
       const header = lines[0];
-      expect(header).toContain('year');
-      expect(header).toContain('title');
-      expect(header).toContain('studios');
-      expect(header).toContain('producers');
-      expect(header).toContain('winner');
+      expect(header).toBe('year;title;studios;producers;winner');
 
-      // Validate separator is semicolon
+      // Validate separator is semicolon throughout the file
       expect(header.includes(';')).toBe(true);
+      
+      // Count winning movies in CSV
+      const winnerLines = lines.slice(1).filter(line => line.trim().endsWith(';yes'));
+      expect(winnerLines.length).toBe(42); // Exact number of winners
+      
+      // Validate all lines have 5 fields
+      lines.slice(1).forEach((line, index) => {
+        const fields = line.split(';');
+        expect(fields.length).toBe(5); // year, title, studios, producers, winner
+        
+        // Validate year format (should be 4 digits)
+        const year = parseInt(fields[0], 10);
+        expect(year).toBeGreaterThanOrEqual(1980);
+        expect(year).toBeLessThanOrEqual(2019); // Last year in CSV
+        
+        // Validate title is not empty
+        expect(fields[1].trim().length).toBeGreaterThan(0);
+      });
+      
+      // Validate specific key movies exist (smoke test for CSV content)
+      const csvText = csvContent.toLowerCase();
+      expect(csvText).toContain('joel silver');
+      expect(csvText).toContain('matthew vaughn');
+      expect(csvText).toContain('hudson hawk');
+      expect(csvText).toContain('swept away');
+      expect(csvText).toContain('fantastic four');
     });
   });
 });
