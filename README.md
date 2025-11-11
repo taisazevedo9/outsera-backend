@@ -6,17 +6,15 @@ RESTful API for reading the list of nominees and winners of the **Worst Picture*
 
 This API was developed to meet the following requirements:
 
-- Read CSV file of movies and insert data into a database on application startup
+- Read CSV file of movies
 - Get the producer with the longest interval between two consecutive awards
 - Get the producer who obtained two awards the fastest
 - Integration tests ensuring compliance with provided data
-- **SQLite embedded database** (in-memory) - no external installation required
 
 ## Technologies
 
 - **Node.js** - JavaScript Runtime
 - **Express 4.18.2** - Web Framework
-- **SQLite3 5.1.6** - Embedded Database
 - **Swagger UI Express 5.0.0** - Interactive API Documentation
 - **Jest 29.7.0** - Testing Framework
 - **Supertest 6.3.3** - HTTP Integration Testing
@@ -54,7 +52,6 @@ The server will start on port **3000** by default.
 ```
 Server running on port 3000
 Swagger documentation available at: http://localhost:3000/docs
-Connected to SQLite database
  X movie(s) successfully imported from CSV
 Movie import process completed
 ```
@@ -78,45 +75,6 @@ After starting the server, access the interactive documentation at:
 
 http://localhost:3000/docs
 
-````
-
-**Criteria:**
-- Considers only **winning** movies (winner = "yes")
-- Calculates intervals between **consecutive** awards for the same producer
-- Supports multiple producers (separated by comma or "and")
-- Returns only producers with **2 or more wins**
-
-## CSV Structure
-
-The CSV file must have the following structure with semicolon (`;`) as separator:
-
-**Fields:**
-- `year` - Movie year (integer)
-- `title` - Movie title (required)
-- `studios` - Production studios
-- `producers` - Producers (separated by comma or "and")
-- `winner` - "yes" for winners, empty for nominees
-
-## Database
-
-- **DBMS:** SQLite3 (embedded)
-- **File:** `database.sqlite` (automatically created in root)
-- **Type:** In-memory during tests, persisted to file in production
-- **Import:** Automatic on application startup (from file `uploads/movielist.csv`)
-
-**Table: movies**
-```sql
-CREATE TABLE movies (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  year INTEGER,
-  title TEXT NOT NULL,
-  studios TEXT,
-  producers TEXT,
-  winner TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-````
-
 ### Resources
 
 - Distinct URIs for each resource: `/api/awards`
@@ -139,6 +97,7 @@ Create a `.env` file in the project root (use `.env.example` as reference):
 # Server Configuration
 PORT=3000
 NODE_ENV=development
+API_URL=http://localhost:3000
 
 # Database Configuration
 DB_PATH=./database.sqlite
@@ -149,6 +108,45 @@ CSV_PATH=./uploads/movielist.csv
 # CORS Configuration
 CORS_ORIGIN=*
 ```
+
+## Deploy on Render
+
+### Environment Variables to Configure on Render:
+
+```env
+NODE_ENV=production
+API_URL=https://your-app-name.onrender.com
+PORT=10000
+CORS_ORIGIN=*
+```
+
+**Important Steps:**
+
+1. **Replace** `your-app-name` with your actual Render app URL (example: `outsera-backend`)
+2. Make sure the `API_URL` uses **https://** (not http://)
+3. The `API_URL` should match your Render service URL exactly
+
+### Build Command:
+
+```bash
+npm install
+```
+
+### Start Command:
+
+```bash
+npm start
+```
+
+### After Deployment:
+
+Test the endpoints:
+
+- **API Endpoint:** `https://your-app-name.onrender.com/api/awards/producers-intervals`
+- **Swagger Docs:** `https://your-app-name.onrender.com/docs`
+- **Swagger JSON:** `https://your-app-name.onrender.com/api-docs.json`
+
+**Note:** The Swagger UI will automatically use the `API_URL` environment variable to make requests, avoiding CORS issues.
 
 ## Usage Examples
 
