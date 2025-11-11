@@ -20,7 +20,21 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Swagger UI options to fix CORS issues
+const swaggerOptions = {
+  swaggerOptions: {
+    url: '/api-docs.json',
+    persistAuthorization: true,
+  }
+};
+
+// Serve swagger JSON
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocument);
+});
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
 
 app.get('/', (req, res) => {
   res.json({

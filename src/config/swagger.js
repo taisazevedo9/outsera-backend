@@ -3,15 +3,15 @@ const swaggerDefinition = {
   info: {
     title: 'API RESTful - Outsera Backend',
     version: '1.0.0',
-    description: 'RESTful API with Express, SQLite and Swagger',
+    description: 'RESTful API with Express, Swagger',
     contact: {
       name: 'API Support'
     }
   },
   servers: [
     {
-      url: 'http://localhost:3000',
-      description: 'Development Server'
+      url: process.env.API_URL || 'http://localhost:3000',
+      description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server'
     }
   ],
   tags: [
